@@ -95,7 +95,7 @@ methods(class = class(sat.mod))[1:9]
 ##   • Use function methods to get more information about the fit
 
 confint(sat.mod)
-#hist(residuals(sat.mod))
+hist(residuals(sat.mod))
 
 ## Linear Regression Assumptions
 ## ─────────────────────────────────
@@ -140,13 +140,13 @@ plot(sts.metro.ener)
 
 model1 = lm(energy ~ metro, data = states.data)
 summary(model1)
-      #Based on the very low R-Squared (0.1154) value, and the * indication, metro is not a signficant predictor of energy.
+      #Based on the very low R-Squared (0.1154) value, and only 1 *, metro is not a signficant predictor of energy.
 confint(model1)
 hist(residuals(model1))
 par(mar = c(4, 4, 2, 2), mfrow = c(1, 2)) #optional
 plot(model1, which = c(1, 2)) 
 
-      #The residuals are not normally distributed
+      #Based on the histogram, we can see that the residuals are right skewed and are therefore not normally distributed
 
 
 ##   Select one or more additional predictors to add to your model and
@@ -156,10 +156,10 @@ plot(model1, which = c(1, 2))
 model2 = lm(energy ~ metro + income, data = states.data)
 summary(model2)
 
-model3 = lm(energy ~ metro + region, data = states.data)
+model3 = update(model2, energy ~ metro + region)
 summary(model3)
 
-model4 = lm(energy ~ metro + density, data = states.data)
+model4 = update(model2, energy ~ metro + density)
 summary(model4)
 
 anova(model1, model3)
@@ -234,13 +234,25 @@ coef(summary(lm(csat ~ C(region, contr.helmert),
 ##   1. Add on to the regression equation that you created in exercise 1 by
 ##      generating an interaction term and testing the interaction.
 
-model1 = lm(energy ~ metro*income, data = states.data)
+library(corrplot)
+
+cols = c('metro','expense','house','senate')
+
+states.data[,cols] = sapply(states.data[,cols],function(x) as.numeric(x))
+
+m <- cor(states.data[,cols],use="pairwise.complete.obs")
+
+par(mar = c(4, 4, 2, 2), mfrow = c(1, 1)) #optional
+
+corrplot(m,method="number")
+
+model1 = update(model1, energy ~ metro + house*senate)
 coef(summary(model1))
 
 
 ##   2. Try adding region to the model. Are there significant differences
 ##      across the four regions?
 
-model1a = lm(energy ~ metro*income + region, data = states.data)
+model1a = update(model1, energy ~ metro + house*senate + region)
 coef(summary(model1a))
      # Yes, there are significant differences across regions
